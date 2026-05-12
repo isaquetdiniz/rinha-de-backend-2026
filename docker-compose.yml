@@ -6,15 +6,17 @@ services:
     ports:
       - "9999:9999"
     depends_on:
-      - api1
-      - api2
+      api1:
+        condition: service_healthy
+      api2:
+        condition: service_healthy
     networks:
       - backend
     deploy:
       resources:
         limits:
           cpus: "0.1"
-          memory: "30MB"
+          memory: "10MB"
 
   api1:
     image: ghcr.io/isaquetdiniz/rinha-de-backend-2026:ef4e804
@@ -25,11 +27,18 @@ services:
       - ./normalization.json:/data/normalization.json:ro
     networks:
       - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/ready').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 60s
     deploy:
       resources:
         limits:
           cpus: "0.45"
-          memory: "160MB"
+          memory: "170MB"
 
   api2:
     image: ghcr.io/isaquetdiniz/rinha-de-backend-2026:ef4e804
@@ -40,11 +49,18 @@ services:
       - ./normalization.json:/data/normalization.json:ro
     networks:
       - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/ready').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 60s
     deploy:
       resources:
         limits:
           cpus: "0.45"
-          memory: "160MB"
+          memory: "170MB"
 
 networks:
   backend:
