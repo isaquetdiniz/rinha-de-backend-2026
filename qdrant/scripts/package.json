@@ -1,0 +1,19 @@
+{
+  "name": "rinha-qdrant-scripts",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "node --experimental-strip-types --test parse-refs.test.ts"
+  },
+  "dependencies": {
+    "@qdrant/js-client-rest": "^1.13.0",
+    "stream-chain": "^2.2.5",
+    "stream-json": "^1.8.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/stream-chain": "^2.1.0",
+    "@types/stream-json": "^1.7.7",
+    "typescript": "^5.5.0"
+  }
+}
