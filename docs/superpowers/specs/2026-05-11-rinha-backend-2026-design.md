@@ -1,7 +1,7 @@
 # Design: Rinha de Backend 2026 — Fraud Detection
 
 **Data:** 2026-05-11  
-**Stack:** Node.js (Fastify) + Qdrant  
+**Stack:** Node.js + TypeScript (Fastify) + Qdrant  
 **Desafio:** API de detecção de fraude via KNN em 3M vetores dentro de 1 CPU e 350 MB RAM
 
 ---
@@ -40,7 +40,7 @@ porta 9999
 ### Serviços
 
 - **nginx**: load balancer round-robin na porta 9999, keepalive habilitado
-- **api1 / api2**: Fastify com Node.js 22 Alpine; normalizam o payload e consultam o Qdrant via gRPC
+- **api1 / api2**: Fastify com Node.js 22 Alpine + TypeScript compilado; normalizam o payload e consultam o Qdrant via gRPC
 - **qdrant**: banco vetorial com índice HNSW pré-construído na imagem Docker
 
 ---
@@ -181,19 +181,40 @@ Os valores de normalização são lidos de `normalization.json` no startup do sc
 rinha-de-backend-2026/
 ├── api/
 │   ├── src/
-│   │   ├── server.js       # Fastify, rotas /ready e /fraud-score
-│   │   ├── normalize.js    # toVector(payload, mccRisk) → Float32Array[14]
-│   │   └── qdrant.js       # gRPC client, findNeighbors(vector) → neighbors[5]
+│   │   ├── server.ts       # Fastify, rotas /ready e /fraud-score
+│   │   ├── normalize.ts    # toVector(payload, mccRisk) → Float32Array[14]
+│   │   ├── qdrant.ts       # gRPC client, findNeighbors(vector) → neighbors[5]
+│   │   └── types.ts        # interfaces FraudRequest, Neighbor, NormalizationConfig
+│   ├── tsconfig.json
 │   ├── package.json
 │   └── Dockerfile
 ├── qdrant/
 │   ├── scripts/
-│   │   ├── build-index.js  # cria coleção, insere vetores, aguarda índice
-│   │   └── parse-refs.js   # streaming parser do references.json.gz
+│   │   ├── build-index.ts  # cria coleção, insere vetores, aguarda índice
+│   │   └── parse-refs.ts   # streaming parser do references.json.gz
 │   └── Dockerfile
 ├── nginx/
 │   └── nginx.conf
 └── docker-compose.yml
+```
+
+### TypeScript — decisões de configuração
+
+- Node.js 22 suporta `--experimental-strip-types`: roda arquivos `.ts` diretamente, sem compilação
+- Sem `tsc` no Dockerfile, sem `dist/`, sem multi-stage para TypeScript — Dockerfile idêntico ao de um projeto JS
+- Type-checking feito localmente via `tsc --noEmit` (não bloqueia a imagem de produção)
+- `strict: true` no `tsconfig.json` — garante que campos opcionais como `last_transaction` sejam tratados explicitamente
+
+### Dockerfile da API
+
+```dockerfile
+FROM node:22-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev
+COPY src/ ./src/
+EXPOSE 3000
+CMD ["node", "--experimental-strip-types", "src/server.ts"]
 ```
 
 ---
