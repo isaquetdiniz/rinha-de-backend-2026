@@ -17,7 +17,7 @@ services:
           memory: "30MB"
 
   api1:
-    image: ghcr.io/isaquetdiniz/rinha-backend-2026:4d4c273
+    image: ghcr.io/isaquetdiniz/rinha-de-backend-2026:4d4c273
     environment:
       DATA_DIR: /data
     volumes:
@@ -32,7 +32,7 @@ services:
           memory: "160MB"
 
   api2:
-    image: ghcr.io/isaquetdiniz/rinha-backend-2026:4d4c273
+    image: ghcr.io/isaquetdiniz/rinha-de-backend-2026:4d4c273
     environment:
       DATA_DIR: /data
     volumes:
