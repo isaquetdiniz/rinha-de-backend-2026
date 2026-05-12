@@ -1,4 +1,4 @@
-import { QdrantClient } from '@qdrant/js-client-rest'
+import { QdrantClient } from '@qdrant/js-client-grpc'
 import type { Neighbor } from './types.ts'
 
 const COLLECTION = 'txns'
@@ -12,7 +12,7 @@ export class QdrantService {
 
   async isReady(): Promise<boolean> {
     try {
-      await this.client.getCollection(COLLECTION)
+      await this.client.api('service').healthCheck({})
       return true
     } catch {
       return false
@@ -20,11 +20,16 @@ export class QdrantService {
   }
 
   async findNeighbors(vector: number[]): Promise<Neighbor[]> {
-    const result = await this.client.search(COLLECTION, {
+    const result = await this.client.api('points').search({
+      collectionName: COLLECTION,
       vector,
-      limit: 5,
-      with_payload: true,
+      limit: BigInt(5),
+      withPayload: { selectorOptions: { case: 'enable', value: true } },
     })
-    return result.map(hit => ({ label: hit.payload!['label'] as 'fraud' | 'legit' }))
+    return result.result.map(hit => {
+      const kind = hit.payload['label']?.kind
+      const label = kind?.case === 'stringValue' ? kind.value : 'legit'
+      return { label: label as 'fraud' | 'legit' }
+    })
   }
 }
