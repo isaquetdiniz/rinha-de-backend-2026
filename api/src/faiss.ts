@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import type { Index as IndexType } from 'faiss-node'
-import type { Neighbor } from './types.ts'
 
 const require = createRequire(import.meta.url)
 const { Index } = require('faiss-node') as typeof import('faiss-node')
@@ -15,10 +14,12 @@ export class FaissService {
     this.labels = readFileSync(labelsPath)
   }
 
-  findNeighbors(vector: number[]): Neighbor[] {
+  search(vector: number[]): number {
     const { labels } = this.index.search(vector, 5)
-    return labels.map(i => ({
-      label: i !== -1 && this.labels[i] === 1 ? 'fraud' : 'legit',
-    }))
+    let fraudCount = 0
+    for (const i of labels) {
+      if (i !== -1 && this.labels[i] === 1) fraudCount++
+    }
+    return fraudCount
   }
 }

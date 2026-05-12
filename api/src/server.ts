@@ -30,8 +30,7 @@ fastify.post<{ Body: FraudRequest; Reply: FraudResponse }>(
   '/fraud-score',
   async (req) => {
     const vector = toVector(req.body, mccRisk, norm)
-    const neighbors = faiss.findNeighbors(vector)
-    const fraudCount = neighbors.filter(n => n.label === 'fraud').length
+    const fraudCount = faiss.search(vector)
     const fraud_score = fraudCount / 5
     return { approved: fraud_score < 0.6, fraud_score }
   },
