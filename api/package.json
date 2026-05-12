@@ -7,11 +7,18 @@
     "test": "node --experimental-strip-types --test src/normalize.test.ts"
   },
   "dependencies": {
-    "@qdrant/js-client-grpc": "^1.18.0",
+    "faiss-node": "^0.5.1",
     "fastify": "^5.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["faiss-node"]
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "@types/stream-chain": "^2.1.0",
+    "@types/stream-json": "^1.7.7",
+    "stream-chain": "^2.2.5",
+    "stream-json": "^1.8.0",
     "typescript": "^5.5.0"
   }
 }

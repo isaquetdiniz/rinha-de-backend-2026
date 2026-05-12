@@ -1,8 +1,19 @@
-FROM node:22-alpine
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Stage 1: Build Faiss index
+FROM node:22-bookworm-slim AS builder
+WORKDIR /build
+COPY api/package.json ./
+RUN npm install
+COPY api/scripts/ ./scripts/
+COPY qdrant/references.json.gz ./references.json.gz
+RUN node --experimental-strip-types scripts/build-faiss-index.ts
+
+# Stage 2: Runtime
+FROM node:22-bookworm-slim
 WORKDIR /app
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile --prod
-COPY src/ ./src/
+COPY api/package.json ./
+RUN npm install --omit=dev
+COPY api/src/ ./src/
+COPY --from=builder /data/txns.index /data/txns.index
+COPY --from=builder /data/txns.labels /data/txns.labels
 EXPOSE 3000
 CMD ["node", "--experimental-strip-types", "src/server.ts"]

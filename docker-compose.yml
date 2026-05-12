@@ -18,60 +18,37 @@ services:
 
   api1:
     build:
-      context: ./api
+      context: .
+      dockerfile: api/Dockerfile
     environment:
-      QDRANT_URL: http://qdrant:6334
       DATA_DIR: /data
     volumes:
       - ./qdrant/mcc_risk.json:/data/mcc_risk.json:ro
       - ./qdrant/normalization.json:/data/normalization.json:ro
-    depends_on:
-      qdrant:
-        condition: service_healthy
     networks:
       - backend
     deploy:
       resources:
         limits:
-          cpus: "0.2"
-          memory: "60MB"
+          cpus: "0.45"
+          memory: "160MB"
 
   api2:
     build:
-      context: ./api
+      context: .
+      dockerfile: api/Dockerfile
     environment:
-      QDRANT_URL: http://qdrant:6334
       DATA_DIR: /data
     volumes:
       - ./qdrant/mcc_risk.json:/data/mcc_risk.json:ro
       - ./qdrant/normalization.json:/data/normalization.json:ro
-    depends_on:
-      qdrant:
-        condition: service_healthy
     networks:
       - backend
     deploy:
       resources:
         limits:
-          cpus: "0.2"
-          memory: "60MB"
-
-  qdrant:
-    build:
-      context: ./qdrant
-    healthcheck:
-      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/6333 && echo -e \"GET /healthz HTTP/1.0\\r\\nHost: localhost\\r\\n\\r\\n\" >&3 && timeout 2 cat <&3 | grep -q OK'"]
-      interval: 3s
-      timeout: 5s
-      retries: 30
-      start_period: 30s
-    networks:
-      - backend
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: "200MB"
+          cpus: "0.45"
+          memory: "160MB"
 
 networks:
   backend:
