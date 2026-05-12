@@ -4,7 +4,7 @@ WORKDIR /build
 COPY api/package.json ./
 RUN npm install
 COPY api/scripts/ ./scripts/
-COPY qdrant/references.json.gz ./references.json.gz
+COPY api/references.json.gz ./references.json.gz
 RUN node --experimental-strip-types scripts/build-faiss-index.ts
 
 # Stage 2: Runtime

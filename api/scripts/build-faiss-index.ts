@@ -28,8 +28,8 @@ for await (const record of parseReferences(REFS_PATH)) {
 }
 console.log(`Total: ${count} vetores`)
 
-console.log('Treinando índice SQ8...')
-const index: IndexType = Index.fromFactory(DIMS, 'SQ8')
+console.log('Treinando índice IVF1024,SQ8...')
+const index: IndexType = Index.fromFactory(DIMS, 'IVF1024,SQ8')
 index.train(flatVectors)
 
 console.log('Adicionando vetores...')

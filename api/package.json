@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test src/normalize.test.ts"
+    "test": "node --experimental-strip-types --test 'src/*.test.ts' 'scripts/*.test.ts'"
   },
   "dependencies": {
     "faiss-node": "^0.5.1",

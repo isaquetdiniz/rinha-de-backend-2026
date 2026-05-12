@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      '@qdrant/js-client-grpc':
-        specifier: ^1.18.0
-        version: 1.18.0(typescript@5.9.3)
       faiss-node:
         specifier: ^0.5.1
         version: 0.5.1
@@ -21,26 +18,23 @@ importers:
       '@types/node':
         specifier: ^22.0.0
         version: 22.19.19
+      '@types/stream-chain':
+        specifier: ^2.1.0
+        version: 2.1.0
+      '@types/stream-json':
+        specifier: ^1.7.7
+        version: 1.7.8
+      stream-chain:
+        specifier: ^2.2.5
+        version: 2.2.5
+      stream-json:
+        specifier: ^1.8.0
+        version: 1.9.1
       typescript:
         specifier: ^5.5.0
         version: 5.9.3
 
 packages:
-
-  '@bufbuild/protobuf@2.12.0':
-    resolution: {integrity: sha512-B/XlCaFIP8LOwzo+bz5uFzATYokcwCKQcghqnlfwSmM5eX/qTkvDBnDPs+gXtX/RyjxJ4DRikECcPJbyALA8FA==}
-
-  '@connectrpc/connect-node@2.1.1':
-    resolution: {integrity: sha512-s3TfsI1XF+n+1z6MBS9rTnFsxxR4Rw5wmdEnkQINli81ESGxcsfaEet8duzq8LVuuCupmhUsgpRo0Nv9pZkufg==}
-    engines: {node: '>=20'}
-    peerDependencies:
-      '@bufbuild/protobuf': ^2.7.0
-      '@connectrpc/connect': 2.1.1
-
-  '@connectrpc/connect@2.1.1':
-    resolution: {integrity: sha512-JzhkaTvM73m2K1URT6tv53k2RwngSmCXLZJgK580qNQOXRzZRR/BCMfZw3h+90JpnG6XksP5bYT+cz0rpUzUWQ==}
-    peerDependencies:
-      '@bufbuild/protobuf': ^2.7.0
 
   '@fastify/ajv-compiler@4.0.5':
     resolution: {integrity: sha512-KoWKW+MhvfTRWL4qrhUwAAZoaChluo0m0vbiJlGMt2GXvL4LVPQEjt8kSpHI3IBq5Rez8fg+XeH3cneztq+C7A==}
@@ -63,14 +57,14 @@ packages:
   '@pinojs/redact@0.4.0':
     resolution: {integrity: sha512-k2ENnmBugE/rzQfEcdWHcCY+/FM3VLzH9cYEsbdsoqrvzAKRhUZeRNhAZvB8OitQJ1TBed3yqWtdjzS6wJKBwg==}
 
-  '@qdrant/js-client-grpc@1.18.0':
-    resolution: {integrity: sha512-NyhxAskUedciny9N5sO0qXxD6sCGp6tDQcLVyUIfYuup+jckDwRyCoWXDLurF8Zbh1ckk6a/eO/qdiRIvyoEgQ==}
-    engines: {node: '>=18.0.0', pnpm: '>=8'}
-    peerDependencies:
-      typescript: '>=4.1'
-
   '@types/node@22.19.19':
     resolution: {integrity: sha512-dyh/xO2Fh5bYrfWaaqGrRQQGkNdmYw6AmaAUvYeUMNTWQtvb796ikLdmTchRmOlOiIJ1TDXfWgVx1QkUlQ6Hew==}
+
+  '@types/stream-chain@2.1.0':
+    resolution: {integrity: sha512-guDyAl6s/CAzXUOWpGK2bHvdiopLIwpGu8v10+lb9hnQOyo4oj/ZUQFOvqFjKGsE3wJP1fpIesCcMvbXuWsqOg==}
+
+  '@types/stream-json@1.7.8':
+    resolution: {integrity: sha512-MU1OB1eFLcYWd1LjwKXrxdoPtXSRzRmAnnxs4Js/ayB5O/NvHraWwuOaqMWIebpYwM6khFlsJOHEhI9xK/ab4Q==}
 
   abstract-logging@2.0.1:
     resolution: {integrity: sha512-2BjRTZxTPvheOvGbBslFSYOUkr+SjPtOnrLP33f+VIWLzezQpZcqVg7ja3L4dBXmzzgwT+a029jRx5PCi3JuiA==}
@@ -315,6 +309,12 @@ packages:
     resolution: {integrity: sha512-UcjcJOWknrNkF6PLX83qcHM6KHgVKNkV62Y8a5uYDVv9ydGQVwAHMKqHdJje1VTWpljG0WYpCDhrCdAOYH4TWg==}
     engines: {node: '>= 10.x'}
 
+  stream-chain@2.2.5:
+    resolution: {integrity: sha512-1TJmBx6aSWqZ4tx7aTpBDXK0/e2hhcNSTV8+CbFJtDjbb+I1mZ8lHit0Grw9GRT+6JbIrrDd8esncgBi8aBXGA==}
+
+  stream-json@1.9.1:
+    resolution: {integrity: sha512-uWkjJ+2Nt/LO9Z/JyKZbMusL8Dkh97uUBTv3AJQ74y07lVahLY4eEFsPsE97pxYBwr8nnjMAIch5eqI0gPShyw==}
+
   string_decoder@1.3.0:
     resolution: {integrity: sha512-hkRX8U1WjJFd8LsDJ2yQ/wWWxaopEsABU1XfkM8A+j0+85JAGppt16cr1Whg6KIbb4okU6Mql6BOj+uup/wKeA==}
 
@@ -356,17 +356,6 @@ packages:
 
 snapshots:
 
-  '@bufbuild/protobuf@2.12.0': {}
-
-  '@connectrpc/connect-node@2.1.1(@bufbuild/protobuf@2.12.0)(@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.12.0))':
-    dependencies:
-      '@bufbuild/protobuf': 2.12.0
-      '@connectrpc/connect': 2.1.1(@bufbuild/protobuf@2.12.0)
-
-  '@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.12.0)':
-    dependencies:
-      '@bufbuild/protobuf': 2.12.0
-
   '@fastify/ajv-compiler@4.0.5':
     dependencies:
       ajv: 8.20.0
@@ -392,16 +381,18 @@ snapshots:
 
   '@pinojs/redact@0.4.0': {}
 
-  '@qdrant/js-client-grpc@1.18.0(typescript@5.9.3)':
-    dependencies:
-      '@bufbuild/protobuf': 2.12.0
-      '@connectrpc/connect': 2.1.1(@bufbuild/protobuf@2.12.0)
-      '@connectrpc/connect-node': 2.1.1(@bufbuild/protobuf@2.12.0)(@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.12.0))
-      typescript: 5.9.3
-
   '@types/node@22.19.19':
     dependencies:
       undici-types: 6.21.0
+
+  '@types/stream-chain@2.1.0':
+    dependencies:
+      '@types/node': 22.19.19
+
+  '@types/stream-json@1.7.8':
+    dependencies:
+      '@types/node': 22.19.19
+      '@types/stream-chain': 2.1.0
 
   abstract-logging@2.0.1: {}
 
@@ -657,6 +648,12 @@ snapshots:
       atomic-sleep: 1.0.0
 
   split2@4.2.0: {}
+
+  stream-chain@2.2.5: {}
+
+  stream-json@1.9.1:
+    dependencies:
+      stream-chain: 2.2.5
 
   string_decoder@1.3.0:
     dependencies:

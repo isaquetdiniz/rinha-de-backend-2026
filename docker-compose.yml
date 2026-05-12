@@ -23,8 +23,8 @@ services:
     environment:
       DATA_DIR: /data
     volumes:
-      - ./qdrant/mcc_risk.json:/data/mcc_risk.json:ro
-      - ./qdrant/normalization.json:/data/normalization.json:ro
+      - ./api/mcc_risk.json:/data/mcc_risk.json:ro
+      - ./api/normalization.json:/data/normalization.json:ro
     networks:
       - backend
     deploy:
@@ -40,8 +40,8 @@ services:
     environment:
       DATA_DIR: /data
     volumes:
-      - ./qdrant/mcc_risk.json:/data/mcc_risk.json:ro
-      - ./qdrant/normalization.json:/data/normalization.json:ro
+      - ./api/mcc_risk.json:/data/mcc_risk.json:ro
+      - ./api/normalization.json:/data/normalization.json:ro
     networks:
       - backend
     deploy:
