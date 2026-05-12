@@ -1,0 +1,78 @@
+services:
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "9999:9999"
+    depends_on:
+      - api1
+      - api2
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: "30MB"
+
+  api1:
+    build:
+      context: ./api
+    environment:
+      QDRANT_URL: http://qdrant:6333
+      DATA_DIR: /data
+    volumes:
+      - ./qdrant/mcc_risk.json:/data/mcc_risk.json:ro
+      - ./qdrant/normalization.json:/data/normalization.json:ro
+    depends_on:
+      qdrant:
+        condition: service_healthy
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: "60MB"
+
+  api2:
+    build:
+      context: ./api
+    environment:
+      QDRANT_URL: http://qdrant:6333
+      DATA_DIR: /data
+    volumes:
+      - ./qdrant/mcc_risk.json:/data/mcc_risk.json:ro
+      - ./qdrant/normalization.json:/data/normalization.json:ro
+    depends_on:
+      qdrant:
+        condition: service_healthy
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: "60MB"
+
+  qdrant:
+    build:
+      context: ./qdrant
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/healthz"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "200MB"
+
+networks:
+  backend:
+    driver: bridge
