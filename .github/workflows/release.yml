@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get short SHA
+        id: sha
+        run: echo "short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: api/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/rinha-backend-2026:${{ steps.sha.outputs.short }}
+            ghcr.io/${{ github.repository_owner }}/rinha-backend-2026:latest
+
+      - name: Update submission branch
+        run: |
+          SHORT_SHA=${{ steps.sha.outputs.short }}
+          IMAGE="ghcr.io/${{ github.repository_owner }}/rinha-backend-2026:${SHORT_SHA}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git fetch origin submission
+          git checkout submission
+
+          sed -i "s|ghcr.io/${{ github.repository_owner }}/rinha-backend-2026:.*|${IMAGE}|g" docker-compose.yml
+
+          git add docker-compose.yml
+          git diff --cached --quiet && exit 0
+          git commit -m "chore: atualiza imagem para ${SHORT_SHA}"
+          git push origin submission
