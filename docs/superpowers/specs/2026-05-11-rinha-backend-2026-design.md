@@ -209,9 +209,10 @@ rinha-de-backend-2026/
 
 ```dockerfile
 FROM node:22-alpine
+RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci --omit=dev
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile --prod
 COPY src/ ./src/
 EXPOSE 3000
 CMD ["node", "--experimental-strip-types", "src/server.ts"]
