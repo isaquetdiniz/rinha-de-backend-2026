@@ -1,0 +1,7 @@
+{
+    "participants": ["Isaque Diniz"],
+    "social": ["https://github.com/isaquetdiniz", "https://www.linkedin.com/in/isaquediniz/"],
+    "source-code-repo": "https://github.com/isaquetdiniz/rinha-backend-2026",
+    "stack": ["nodejs", "typescript", "faiss", "nginx"],
+    "open_to_work": false
+}
