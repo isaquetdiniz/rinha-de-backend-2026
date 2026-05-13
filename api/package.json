@@ -10,9 +10,6 @@
     "faiss-node": "^0.5.1",
     "fastify": "^5.0.0"
   },
-  "pnpm": {
-    "onlyBuiltDependencies": ["faiss-node"]
-  },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@types/stream-chain": "^2.1.0",

@@ -55,7 +55,25 @@
       "Bash(gzcat /Users/isaque/projects/rinha-de-backend-2026/qdrant/references.json.gz)",
       "Bash(python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); print\\(len\\(data\\)\\)\")",
       "Bash(xargs cat *)",
-      "Bash(pnpm test *)"
+      "Bash(pnpm test *)",
+      "Bash(chmod +x *)",
+      "Bash(npm show *)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(list\\(d.get\\('dist',{}\\).keys\\(\\)\\)\\)\")",
+      "Read(//private/tmp/**)",
+      "Bash(npm pack *)",
+      "Bash(tar -tzf faiss-node-0.5.1.tgz)",
+      "Bash(grep -E \"\\\\\\\\.d\\\\\\\\.ts$|index\\\\\\\\.js$\")",
+      "Bash(tar -xf faiss-node-0.5.1.tgz package/lib/index.d.ts package/lib/index.js -O package/lib/index.d.ts)",
+      "Bash(tar -xOf faiss-node-0.5.1.tgz package/lib/index.d.ts)",
+      "Bash(tar -xOf faiss-node-0.5.1.tgz package/lib/index.js)",
+      "Bash(tar -xOf faiss-node-0.5.1.tgz package/examples/index.js)",
+      "Bash(zcat references.json.gz)",
+      "Bash(python3 -c ' *)",
+      "Bash(gunzip -c references.json.gz)",
+      "Bash(node *)",
+      "Bash(k6 version *)",
+      "Bash(mkdir -p /Users/isaque/projects/rinha-de-backend-2026/k6-test)",
+      "Bash(wait)"
     ]
   }
 }
