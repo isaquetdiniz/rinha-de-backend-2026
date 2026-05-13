@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "faiss-node": "^0.5.1",
-    "fastify": "^5.0.0"
+    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.67.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
