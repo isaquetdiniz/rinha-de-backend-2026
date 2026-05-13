@@ -1,5 +1,5 @@
 # Stage 1: Build Faiss index
-FROM node:22-noble-slim AS builder
+FROM node:22-noble AS builder
 WORKDIR /build
 COPY api/package.json ./
 RUN npm install
@@ -8,7 +8,7 @@ COPY api/references.json.gz ./references.json.gz
 RUN node --experimental-strip-types scripts/build-faiss-index.ts
 
 # Stage 2: Runtime
-FROM node:22-noble-slim
+FROM node:22-noble
 WORKDIR /app
 COPY api/package.json ./
 RUN npm install --omit=dev
