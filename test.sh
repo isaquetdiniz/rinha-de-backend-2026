@@ -15,10 +15,10 @@ assert_eq() {
   local label="$1" expected="$2" actual="$3"
   if [ "$actual" = "$expected" ]; then
     green "  PASS  $label"
-    ((PASS++))
+    PASS=$((PASS + 1))
   else
     red   "  FAIL  $label (esperado=$expected, atual=$actual)"
-    ((FAIL++))
+    FAIL=$((FAIL + 1))
   fi
 }
 
@@ -123,7 +123,7 @@ printf "  min=%dms  avg=%dms  p50=%dms  p99=%dms  max=%dms\n" \
 
 if [ "$P99" -lt 100 ]; then
   green "  PASS  p99 < 100ms"
-  ((PASS++))
+  PASS=$((PASS + 1))
 else
   red   "  WARN  p99 = ${P99}ms (acima de 100ms)"
 fi
