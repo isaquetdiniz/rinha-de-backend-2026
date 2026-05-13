@@ -6,10 +6,8 @@ services:
     ports:
       - "9999:9999"
     depends_on:
-      api1:
-        condition: service_healthy
-      api2:
-        condition: service_healthy
+      - api1
+      - api2
     networks:
       - backend
     deploy:
@@ -28,12 +26,6 @@ services:
       - ./normalization.json:/data/normalization.json:ro
     networks:
       - backend
-    healthcheck:
-      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3000/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-      start_period: 60s
     deploy:
       resources:
         limits:
@@ -50,12 +42,6 @@ services:
       - ./normalization.json:/data/normalization.json:ro
     networks:
       - backend
-    healthcheck:
-      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3000/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-      start_period: 60s
     deploy:
       resources:
         limits:
