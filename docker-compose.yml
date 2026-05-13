@@ -17,13 +17,8 @@ services:
           memory: "10MB"
 
   api1:
-    image: ghcr.io/isaquetdiniz/rinha-de-backend-2026:3a22c12
+    image: ghcr.io/isaquetdiniz/rinha-de-backend-2026:c5ee2c2
     platform: linux/amd64
-    environment:
-      DATA_DIR: /data
-    volumes:
-      - ./mcc_risk.json:/data/mcc_risk.json:ro
-      - ./normalization.json:/data/normalization.json:ro
     networks:
       - backend
     deploy:
@@ -33,13 +28,8 @@ services:
           memory: "170MB"
 
   api2:
-    image: ghcr.io/isaquetdiniz/rinha-de-backend-2026:3a22c12
+    image: ghcr.io/isaquetdiniz/rinha-de-backend-2026:c5ee2c2
     platform: linux/amd64
-    environment:
-      DATA_DIR: /data
-    volumes:
-      - ./mcc_risk.json:/data/mcc_risk.json:ro
-      - ./normalization.json:/data/normalization.json:ro
     networks:
       - backend
     deploy:
