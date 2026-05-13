@@ -20,6 +20,7 @@ services:
 
   api1:
     image: ghcr.io/isaquetdiniz/rinha-de-backend-2026:3a22c12
+    platform: linux/amd64
     environment:
       DATA_DIR: /data
     volumes:
@@ -27,9 +28,8 @@ services:
       - ./normalization.json:/data/normalization.json:ro
     networks:
       - backend
-    restart: unless-stopped
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/ready').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"]
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3000/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -42,6 +42,7 @@ services:
 
   api2:
     image: ghcr.io/isaquetdiniz/rinha-de-backend-2026:3a22c12
+    platform: linux/amd64
     environment:
       DATA_DIR: /data
     volumes:
@@ -49,9 +50,8 @@ services:
       - ./normalization.json:/data/normalization.json:ro
     networks:
       - backend
-    restart: unless-stopped
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/ready').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"]
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3000/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
       interval: 5s
       timeout: 3s
       retries: 10
