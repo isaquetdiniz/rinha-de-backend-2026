@@ -9,7 +9,7 @@ FAIL=0
 
 green() { printf '\033[32m%s\033[0m\n' "$*"; }
 red()   { printf '\033[31m%s\033[0m\n' "$*"; }
-bold()  { printf '\033[1m%s\033[0m\n' "$*"; }
+bold()  { printf '\n\033[1m%s\033[0m\n' "$*"; }
 
 assert_eq() {
   local label="$1" expected="$2" actual="$3"
@@ -30,13 +30,13 @@ post_fraud() {
 
 # ── /ready ────────────────────────────────────────────────────────────────────
 
-bold "\n=== /ready ==="
+bold "=== /ready ==="
 READY=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/ready")
 assert_eq "GET /ready → 200" "200" "$READY"
 
 # ── casos básicos ─────────────────────────────────────────────────────────────
 
-bold "\n=== Casos básicos ==="
+bold "=== Casos básicos ==="
 
 # Transação normal — deve aprovar
 NORMAL=$(post_fraud '{
@@ -89,7 +89,7 @@ assert_eq "fraud_score ∈ [0,1]" "true" "$IN_RANGE"
 
 # ── latência ──────────────────────────────────────────────────────────────────
 
-bold "\n=== Latência (50 requisições) ==="
+bold "=== Latência (50 requisições) ==="
 
 PAYLOAD='{
   "id": "txn-lat",
@@ -130,6 +130,6 @@ fi
 
 # ── resultado ─────────────────────────────────────────────────────────────────
 
-bold "\n=== Resultado ==="
+bold "=== Resultado ==="
 echo "  passou: $PASS  falhou: $FAIL"
 [ "$FAIL" -eq 0 ] && green "OK" || { red "FALHOU"; exit 1; }
