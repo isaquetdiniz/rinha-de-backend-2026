@@ -17,7 +17,7 @@ services:
           memory: "10MB"
 
   api1:
-    image: ghcr.io/isaquetdiniz/rinha-de-backend-2026:c5ee2c2
+    image: ghcr.io/isaquetdiniz/rinha-de-backend-2026:e43c082
     platform: linux/amd64
     networks:
       - backend
@@ -28,7 +28,7 @@ services:
           memory: "170MB"
 
   api2:
-    image: ghcr.io/isaquetdiniz/rinha-de-backend-2026:c5ee2c2
+    image: ghcr.io/isaquetdiniz/rinha-de-backend-2026:e43c082
     platform: linux/amd64
     networks:
       - backend
