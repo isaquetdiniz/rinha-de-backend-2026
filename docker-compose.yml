@@ -20,11 +20,6 @@ services:
     build:
       context: .
       dockerfile: api/Dockerfile
-    environment:
-      DATA_DIR: /data
-    volumes:
-      - ./api/mcc_risk.json:/data/mcc_risk.json:ro
-      - ./api/normalization.json:/data/normalization.json:ro
     networks:
       - backend
     deploy:
@@ -37,11 +32,6 @@ services:
     build:
       context: .
       dockerfile: api/Dockerfile
-    environment:
-      DATA_DIR: /data
-    volumes:
-      - ./api/mcc_risk.json:/data/mcc_risk.json:ro
-      - ./api/normalization.json:/data/normalization.json:ro
     networks:
       - backend
     deploy:
