@@ -24,7 +24,10 @@ const faiss = new FaissService(
 
 const fastify = Fastify({ logger: false })
 
-fastify.get('/ready', async () => 'ok')
+fastify.get('/ready', async () => {
+  faiss.search(new Array(14).fill(0))
+  return 'ok'
+})
 
 fastify.post<{ Body: FraudRequest; Reply: FraudResponse }>(
   '/fraud-score',
