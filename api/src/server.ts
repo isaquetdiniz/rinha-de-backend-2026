@@ -1,3 +1,4 @@
+import { chmodSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { App } from 'uWebSockets.js'
 import { FaissService } from './faiss.ts'
@@ -93,6 +94,15 @@ app.any('/*', (res) => {
   })
 })
 
-app.listen(3000, (token) => {
-  if (!token) throw new Error('Failed to listen on port 3000')
-})
+const SOCKET_PATH = process.env['SOCKET_PATH']
+
+if (SOCKET_PATH) {
+  app.listen_unix((token) => {
+    if (!token) throw new Error(`Failed to listen on socket ${SOCKET_PATH}`)
+    chmodSync(SOCKET_PATH, 0o777)
+  }, SOCKET_PATH)
+} else {
+  app.listen(3000, (token) => {
+    if (!token) throw new Error('Failed to listen on port 3000')
+  })
+}

@@ -77,7 +77,8 @@
       "WebFetch(domain:hub.docker.com)",
       "WebFetch(domain:packages.debian.org)",
       "Bash(k6 run *)",
-      "Bash(echo \"k6 PID: $!\")"
+      "Bash(echo \"k6 PID: $!\")",
+      "Bash(xargs ls *)"
     ]
   }
 }
