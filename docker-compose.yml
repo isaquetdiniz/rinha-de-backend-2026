@@ -17,7 +17,9 @@ services:
           memory: "30MB"
 
   api1:
-    image: ghcr.io/isaquetdiniz/rinha-de-backend-2026:a85d8b4
+    build:
+      context: .
+      dockerfile: api/Dockerfile
     networks:
       - backend
     deploy:
@@ -27,7 +29,9 @@ services:
           memory: "160MB"
 
   api2:
-    image: ghcr.io/isaquetdiniz/rinha-de-backend-2026:a85d8b4
+    build:
+      context: .
+      dockerfile: api/Dockerfile
     networks:
       - backend
     deploy:

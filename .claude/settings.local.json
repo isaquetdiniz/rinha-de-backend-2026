@@ -73,7 +73,11 @@
       "Bash(node *)",
       "Bash(k6 version *)",
       "Bash(mkdir -p /Users/isaque/projects/rinha-de-backend-2026/k6-test)",
-      "Bash(wait)"
+      "Bash(wait)",
+      "WebFetch(domain:hub.docker.com)",
+      "WebFetch(domain:packages.debian.org)",
+      "Bash(k6 run *)",
+      "Bash(echo \"k6 PID: $!\")"
     ]
   }
 }
