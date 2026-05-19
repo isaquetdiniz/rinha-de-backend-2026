@@ -101,8 +101,7 @@ test('search retorna k vizinhos com labels corretos', () => {
   assert.ok(legitCount >= 3, `Esperava >=3 legítimos nos vizinhos, got ${legitCount}`)
 })
 
-test('search lança erro se índice não carregado', () => {
-  // Verifica que search retorna dados válidos após buildIndex (g_loaded=true)
+test('search retorna no máximo k vizinhos', () => {
   const vectors = new Float32Array(14).fill(0.5)
   const res = addon.search(vectors, 3, 2)
   assert.ok(res.labels.length <= 3)
