@@ -26,6 +26,10 @@ services:
       dockerfile: api/Dockerfile
     environment:
       SOCKET_PATH: /sockets/api1.sock
+      USE_KNN: "true"
+      KNN_NPROBE: "64"
+      KNN_K: "5"
+      KNN_THRESHOLD: "0.6"
     volumes:
       - sockets:/sockets
     networks:
@@ -42,6 +46,10 @@ services:
       dockerfile: api/Dockerfile
     environment:
       SOCKET_PATH: /sockets/api2.sock
+      USE_KNN: "true"
+      KNN_NPROBE: "64"
+      KNN_K: "5"
+      KNN_THRESHOLD: "0.6"
     volumes:
       - sockets:/sockets
     networks:
