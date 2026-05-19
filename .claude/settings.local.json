@@ -78,7 +78,25 @@
       "WebFetch(domain:packages.debian.org)",
       "Bash(k6 run *)",
       "Bash(echo \"k6 PID: $!\")",
-      "Bash(xargs ls *)"
+      "Bash(xargs ls *)",
+      "WebFetch(domain:ewfian.github.io)",
+      "Bash(npm info *)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('name:', d.get\\('name'\\)\\); print\\('version:', d.get\\('version'\\)\\); print\\('exports:', list\\(d.get\\('exports', {}\\).keys\\(\\)\\) if isinstance\\(d.get\\('exports'\\), dict\\) else 'N/A'\\); print\\('main:', d.get\\('main'\\)\\)\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('name:', d.get\\('name'\\)\\); print\\('version:', d.get\\('version'\\)\\); print\\('main:', d.get\\('main'\\)\\)\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\)[0]; files=[f['path'] for f in d.get\\('files', []\\)]; print\\('\\\\n'.join\\(files\\)\\)\")",
+      "Bash(tar -xzf faiss-node-native-*.tgz package/src/js/index.js package/src/js/types.d.ts)",
+      "Bash(rm -rf package faiss-node-native-*.tgz)",
+      "Bash(tar -xzf faiss-node-native-*.tgz package/package.json)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('scripts:', json.dumps\\(d.get\\('scripts', {}\\), indent=2\\)\\); print\\('binary:', d.get\\('binary', 'N/A'\\)\\); print\\('install:', d.get\\('install', 'N/A'\\)\\)\")",
+      "Bash(tar -xzf faiss-node-native-*.tgz package/src/js/index.js)",
+      "Bash(tar -xzf faiss-node-native-*.tgz package/binding.gyp)",
+      "Bash(docker run *)",
+      "WebFetch(domain:unpkg.com)",
+      "Read(//data/**)",
+      "Bash(find / -name \"txns.index\" -maxdepth 6)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(d.get\\('description',''\\), d.get\\('default_branch','main'\\)\\)\")",
+      "Bash(npm ls *)",
+      "WebFetch(domain:api.github.com)"
     ]
   }
 }
