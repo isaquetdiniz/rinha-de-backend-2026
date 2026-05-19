@@ -225,7 +225,74 @@ Napi::Value BuildIndex(const Napi::CallbackInfo& info) {
     }
     return env.Undefined();
 }
-Napi::Value Search    (const Napi::CallbackInfo& info) { return info.Env().Undefined(); }
+Napi::Value Search(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    if (!g_loaded) {
+        Napi::Error::New(env, "Index not loaded").ThrowAsJavaScriptException();
+        return env.Undefined();
+    }
+    try {
+        auto         queryArr = info[0].As<Napi::Float32Array>();
+        int          k        = info[1].As<Napi::Number>().Int32Value();
+        int          nProbe   = info[2].As<Napi::Number>().Int32Value();
+        const float* query    = queryArr.Data();
+        const int    ndim     = g_index.ndim;
+        const int    nl       = g_index.nlist;
+
+        nProbe = std::min(nProbe, nl);
+
+        // Passo 1: encontra os nProbe centroides mais próximos da query
+        std::vector<std::pair<float, int>> cdists(nl);
+        for (int c = 0; c < nl; c++) {
+            cdists[c] = { l2sq(query, g_index.centroids.data() + static_cast<size_t>(c) * ndim, ndim), c };
+        }
+        std::partial_sort(cdists.begin(), cdists.begin() + nProbe, cdists.end());
+
+        // Passo 2: busca nos nProbe clusters com max-heap de tamanho k
+        using Pair = std::pair<float, int32_t>;
+        std::priority_queue<Pair> heap;
+
+        for (int pi = 0; pi < nProbe; pi++) {
+            int          ci  = cdists[pi].second;
+            const auto&  vs  = g_index.vectors[ci];
+            const auto&  ls  = g_index.labels[ci];
+            const int    sz  = static_cast<int>(ls.size());
+
+            for (int j = 0; j < sz; j++) {
+                float           d    = 0.0f;
+                const int16_t*  vptr = vs.data() + static_cast<size_t>(j) * ndim;
+                for (int di = 0; di < ndim; di++) {
+                    float diff = query[di] - dequantize(vptr[di]);
+                    d += diff * diff;
+                }
+                if (static_cast<int>(heap.size()) < k) {
+                    heap.push({ d, ls[j] });
+                } else if (d < heap.top().first) {
+                    heap.pop();
+                    heap.push({ d, ls[j] });
+                }
+            }
+        }
+
+        // Passo 3: extrai resultados (da menor para maior distância)
+        const int          m       = static_cast<int>(heap.size());
+        Napi::Int32Array   labArr  = Napi::Int32Array::New(env, m);
+        Napi::Float32Array distArr = Napi::Float32Array::New(env, m);
+        for (int i = m - 1; i >= 0; i--) {
+            labArr[i]  = heap.top().second;
+            distArr[i] = heap.top().first;
+            heap.pop();
+        }
+
+        Napi::Object result = Napi::Object::New(env);
+        result.Set("labels",    labArr);
+        result.Set("distances", distArr);
+        return result;
+    } catch (const std::exception& e) {
+        Napi::Error::New(env, e.what()).ThrowAsJavaScriptException();
+        return env.Undefined();
+    }
+}
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
     exports.Set("buildIndex", Napi::Function::New(env, BuildIndex));

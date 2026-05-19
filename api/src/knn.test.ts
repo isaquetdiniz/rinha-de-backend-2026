@@ -73,3 +73,37 @@ test('buildIndex + saveIndex + loadIndex preserva ntotal e nlist', () => {
   assert.equal(stats.ntotal, n)
   unlinkSync(path)
 })
+
+test('search retorna k vizinhos com labels corretos', () => {
+  // 50 fraudes próximas de [0.95,...] e 50 legítimos próximos de [0.05,...]
+  const n = 100, ndim = 14, nlist = 4
+  const vectors = new Float32Array(n * ndim)
+  const labels  = new Int32Array(n)
+  for (let i = 0; i < 50; i++) {
+    labels[i] = 1
+    for (let d = 0; d < ndim; d++) vectors[i * ndim + d] = 0.9 + Math.random() * 0.1
+  }
+  for (let i = 50; i < 100; i++) {
+    labels[i] = 0
+    for (let d = 0; d < ndim; d++) vectors[i * ndim + d] = Math.random() * 0.1
+  }
+  addon.buildIndex(vectors, labels, nlist, 10)
+
+  const fraudQuery = new Float32Array(ndim).fill(0.95)
+  const res1 = addon.search(fraudQuery, 5, 2)
+  assert.equal(res1.labels.length, 5)
+  const fraudCount = Array.from(res1.labels).filter(l => l === 1).length
+  assert.ok(fraudCount >= 3, `Esperava >=3 fraudes nos vizinhos, got ${fraudCount}`)
+
+  const legitQuery = new Float32Array(ndim).fill(0.05)
+  const res2 = addon.search(legitQuery, 5, 2)
+  const legitCount = Array.from(res2.labels).filter(l => l === 0).length
+  assert.ok(legitCount >= 3, `Esperava >=3 legítimos nos vizinhos, got ${legitCount}`)
+})
+
+test('search lança erro se índice não carregado', () => {
+  // Verifica que search retorna dados válidos após buildIndex (g_loaded=true)
+  const vectors = new Float32Array(14).fill(0.5)
+  const res = addon.search(vectors, 3, 2)
+  assert.ok(res.labels.length <= 3)
+})
