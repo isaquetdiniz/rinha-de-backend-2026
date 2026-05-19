@@ -106,3 +106,26 @@ test('search retorna no máximo k vizinhos', () => {
   const res = addon.search(vectors, 3, 2)
   assert.ok(res.labels.length <= 3)
 })
+
+test('KnnService.search retorna fraudCount para query de fraude', async () => {
+  const path   = resolve(tmpdir(), 'test_service.index')
+  const n      = 100, ndim = 14, nlist = 4
+  const vectors = new Float32Array(n * ndim)
+  const labels  = new Int32Array(n)
+  for (let i = 0; i < 50; i++) {
+    labels[i] = 1
+    for (let d = 0; d < ndim; d++) vectors[i * ndim + d] = 0.9 + Math.random() * 0.1
+  }
+  for (let i = 50; i < 100; i++) {
+    labels[i] = 0
+    for (let d = 0; d < ndim; d++) vectors[i * ndim + d] = Math.random() * 0.1
+  }
+  addon.buildIndex(vectors, labels, nlist, 10)
+  addon.saveIndex(path)
+
+  const { KnnService } = await import('./knn.ts')
+  const svc = new KnnService(path)
+  const fraudCount = svc.search(new Array(ndim).fill(0.95))
+  assert.ok(fraudCount >= 3, `Esperava >=3 fraudes, got ${fraudCount}`)
+  unlinkSync(path)
+})
