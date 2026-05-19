@@ -30,6 +30,7 @@ services:
       KNN_NPROBE: "64"
       KNN_K: "5"
       KNN_THRESHOLD: "0.6"
+      DATA_DIR: /data
     volumes:
       - sockets:/sockets
     networks:
@@ -50,6 +51,7 @@ services:
       KNN_NPROBE: "64"
       KNN_K: "5"
       KNN_THRESHOLD: "0.6"
+      DATA_DIR: /data
     volumes:
       - sockets:/sockets
     networks:

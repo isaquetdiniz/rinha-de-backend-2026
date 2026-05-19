@@ -1,17 +1,7 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { toVector } from './normalize.ts'
-import type { FraudRequest, NormalizationConfig } from './types.ts'
-
-const norm: NormalizationConfig = {
-  max_amount: 10000,
-  max_installments: 12,
-  amount_vs_avg_ratio: 10,
-  max_minutes: 1440,
-  max_km: 1000,
-  max_tx_count_24h: 20,
-  max_merchant_avg_amount: 10000,
-}
+import type { FraudRequest } from './types.ts'
 
 function near(a: number, b: number, tol = 0.0001): boolean {
   return Math.abs(a - b) < tol
@@ -27,8 +17,7 @@ describe('toVector', () => {
       terminal: { is_online: false, card_present: true, km_from_home: 29.2 },
       last_transaction: null,
     }
-    const mccRisk = new Map([['5912', 0.15]])
-    const vec = toVector(payload, mccRisk, norm)
+    const vec = toVector(payload)
 
     assert.equal(vec.length, 14)
     assert.ok(near(vec[0]!, 0.0041),   `dim[0] esperado 0.0041, recebido ${vec[0]}`)
@@ -56,8 +45,7 @@ describe('toVector', () => {
       terminal: { is_online: false, card_present: true, km_from_home: 952.3 },
       last_transaction: null,
     }
-    const mccRisk = new Map([['5815', 0.75]])
-    const vec = toVector(payload, mccRisk, norm)
+    const vec = toVector(payload)
 
     assert.ok(near(vec[0]!, 0.9506))
     assert.ok(near(vec[1]!, 0.8333))
@@ -84,8 +72,7 @@ describe('toVector', () => {
       terminal: { is_online: true, card_present: false, km_from_home: 0 },
       last_transaction: { timestamp: '2024-01-16T10:00:00Z', km_from_current: 50 },
     }
-    const mccRisk = new Map<string, number>()
-    const vec = toVector(payload, mccRisk, norm)
+    const vec = toVector(payload)
 
     // dim[5]: 480 min / 1440 = 0.3333
     assert.ok(near(vec[5]!, 0.3333), `dim[5] esperado 0.3333, recebido ${vec[5]}`)
@@ -104,7 +91,7 @@ describe('toVector', () => {
       terminal: { is_online: false, card_present: true, km_from_home: 0 },
       last_transaction: null,
     }
-    const vec = toVector(payload, new Map(), norm)
+    const vec = toVector(payload)
     assert.equal(vec[2], 1.0)
   })
 })

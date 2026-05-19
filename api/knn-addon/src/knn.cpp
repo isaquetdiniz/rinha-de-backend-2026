@@ -56,13 +56,13 @@ static void writeIndex(const std::string& path) {
     f.write(reinterpret_cast<const char*>(&g_index.ndim),   4);
     f.write(reinterpret_cast<const char*>(&g_index.ntotal), 4);
     f.write(reinterpret_cast<const char*>(g_index.centroids.data()),
-            static_cast<std::streamsize>(g_index.nlist) * g_index.ndim * sizeof(float));
+            static_cast<std::streamsize>(g_index.nlist) * static_cast<std::streamsize>(g_index.ndim) * sizeof(float));
 
     for (int i = 0; i < g_index.nlist; i++) {
         int32_t sz = static_cast<int32_t>(g_index.labels[i].size());
         f.write(reinterpret_cast<const char*>(&sz), 4);
         f.write(reinterpret_cast<const char*>(g_index.vectors[i].data()),
-                static_cast<std::streamsize>(sz) * g_index.ndim * sizeof(int16_t));
+                static_cast<std::streamsize>(sz) * static_cast<std::streamsize>(g_index.ndim) * sizeof(int16_t));
         f.write(reinterpret_cast<const char*>(g_index.labels[i].data()),
                 static_cast<std::streamsize>(sz) * sizeof(int32_t));
     }
@@ -82,7 +82,7 @@ static void readIndex(const std::string& path) {
 
     g_index.centroids.resize(static_cast<size_t>(g_index.nlist) * g_index.ndim);
     f.read(reinterpret_cast<char*>(g_index.centroids.data()),
-           static_cast<std::streamsize>(g_index.nlist) * g_index.ndim * sizeof(float));
+           static_cast<std::streamsize>(g_index.nlist) * static_cast<std::streamsize>(g_index.ndim) * sizeof(float));
     if (f.fail()) throw std::runtime_error("Truncated file (centroids): " + path);
 
     g_index.vectors.resize(g_index.nlist);
@@ -95,7 +95,7 @@ static void readIndex(const std::string& path) {
         g_index.vectors[i].resize(static_cast<size_t>(sz) * g_index.ndim);
         g_index.labels[i].resize(sz);
         f.read(reinterpret_cast<char*>(g_index.vectors[i].data()),
-               static_cast<std::streamsize>(sz) * g_index.ndim * sizeof(int16_t));
+               static_cast<std::streamsize>(sz) * static_cast<std::streamsize>(g_index.ndim) * sizeof(int16_t));
         f.read(reinterpret_cast<char*>(g_index.labels[i].data()),
                static_cast<std::streamsize>(sz) * sizeof(int32_t));
         if (f.fail()) throw std::runtime_error("Truncated file (cluster data): " + path);
@@ -141,6 +141,11 @@ Napi::Value BuildIndex(const Napi::CallbackInfo& info) {
         const int      ndim   = 14;
         const int      n      = static_cast<int>(labArr.ElementLength());
 
+        if (nlist > n) {
+            Napi::Error::New(env, "nlist must be <= number of vectors").ThrowAsJavaScriptException();
+            return env.Undefined();
+        }
+
         // Sub-amostragem: usa no máximo 100k vetores para treinar k-means
         const int    maxTrain = 100'000;
         const int    trainN   = std::min(n, maxTrain);
@@ -161,7 +166,6 @@ Napi::Value BuildIndex(const Napi::CallbackInfo& info) {
         g_index.ndim  = ndim;
         g_index.centroids.resize(static_cast<size_t>(nlist) * ndim);
 
-        std::shuffle(idx.begin(), idx.begin() + trainN, rng);
         for (int c = 0; c < nlist; c++) {
             const float* src = trainVecs.data() + static_cast<size_t>(c) * ndim;
             std::copy(src, src + ndim, g_index.centroids.data() + static_cast<size_t>(c) * ndim);
