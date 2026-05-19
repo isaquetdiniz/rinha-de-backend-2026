@@ -129,8 +129,102 @@ Napi::Value GetStats(const Napi::CallbackInfo& info) {
     return stats;
 }
 
-// buildIndex e search implementados nas próximas tasks
-Napi::Value BuildIndex(const Napi::CallbackInfo& info) { return info.Env().Undefined(); }
+Napi::Value BuildIndex(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    try {
+        auto           vecArr = info[0].As<Napi::Float32Array>();
+        auto           labArr = info[1].As<Napi::Int32Array>();
+        int            nlist  = info[2].As<Napi::Number>().Int32Value();
+        int            iters  = info[3].As<Napi::Number>().Int32Value();
+        const float*   vecs   = vecArr.Data();
+        const int32_t* labs   = labArr.Data();
+        const int      ndim   = 14;
+        const int      n      = static_cast<int>(labArr.ElementLength());
+
+        // Sub-amostragem: usa no máximo 100k vetores para treinar k-means
+        const int    maxTrain = 100'000;
+        const int    trainN   = std::min(n, maxTrain);
+        std::mt19937 rng(42);
+
+        std::vector<int> idx(n);
+        std::iota(idx.begin(), idx.end(), 0);
+        std::shuffle(idx.begin(), idx.end(), rng);
+
+        std::vector<float> trainVecs(static_cast<size_t>(trainN) * ndim);
+        for (int i = 0; i < trainN; i++) {
+            const float* src = vecs + static_cast<size_t>(idx[i]) * ndim;
+            std::copy(src, src + ndim, trainVecs.data() + static_cast<size_t>(i) * ndim);
+        }
+
+        // Inicialização: seleciona nlist vetores aleatórios como centroides iniciais
+        g_index.nlist = nlist;
+        g_index.ndim  = ndim;
+        g_index.centroids.resize(static_cast<size_t>(nlist) * ndim);
+
+        std::shuffle(idx.begin(), idx.begin() + trainN, rng);
+        for (int c = 0; c < nlist; c++) {
+            const float* src = trainVecs.data() + static_cast<size_t>(idx[c]) * ndim;
+            std::copy(src, src + ndim, g_index.centroids.data() + static_cast<size_t>(c) * ndim);
+        }
+
+        // Iterações k-means no sub-sample
+        std::vector<int>   assignments(trainN);
+        std::vector<float> sums(static_cast<size_t>(nlist) * ndim);
+        std::vector<int>   counts(nlist);
+
+        for (int iter = 0; iter < iters; iter++) {
+            // Assign
+            for (int i = 0; i < trainN; i++) {
+                float best = std::numeric_limits<float>::infinity();
+                int   bc   = 0;
+                for (int c = 0; c < nlist; c++) {
+                    float d = l2sq(trainVecs.data() + static_cast<size_t>(i) * ndim,
+                                   g_index.centroids.data() + static_cast<size_t>(c) * ndim, ndim);
+                    if (d < best) { best = d; bc = c; }
+                }
+                assignments[i] = bc;
+            }
+            // Update
+            std::fill(sums.begin(), sums.end(), 0.0f);
+            std::fill(counts.begin(), counts.end(), 0);
+            for (int i = 0; i < trainN; i++) {
+                int           c   = assignments[i];
+                const float*  v   = trainVecs.data() + static_cast<size_t>(i) * ndim;
+                float*        s   = sums.data() + static_cast<size_t>(c) * ndim;
+                counts[c]++;
+                for (int d = 0; d < ndim; d++) s[d] += v[d];
+            }
+            for (int c = 0; c < nlist; c++) {
+                if (counts[c] == 0) continue;
+                float* cen = g_index.centroids.data() + static_cast<size_t>(c) * ndim;
+                float* s   = sums.data()              + static_cast<size_t>(c) * ndim;
+                for (int d = 0; d < ndim; d++) cen[d] = s[d] / counts[c];
+            }
+        }
+
+        // Atribui TODOS os n vetores ao centroide mais próximo e monta listas invertidas
+        g_index.vectors.assign(nlist, {});
+        g_index.labels.assign(nlist, {});
+
+        for (int i = 0; i < n; i++) {
+            const float* v    = vecs + static_cast<size_t>(i) * ndim;
+            float        best = std::numeric_limits<float>::infinity();
+            int          bc   = 0;
+            for (int c = 0; c < nlist; c++) {
+                float d = l2sq(v, g_index.centroids.data() + static_cast<size_t>(c) * ndim, ndim);
+                if (d < best) { best = d; bc = c; }
+            }
+            for (int d = 0; d < ndim; d++) g_index.vectors[bc].push_back(quantize(v[d]));
+            g_index.labels[bc].push_back(labs[i]);
+        }
+
+        g_index.ntotal = n;
+        g_loaded       = true;
+    } catch (const std::exception& e) {
+        Napi::Error::New(env, e.what()).ThrowAsJavaScriptException();
+    }
+    return env.Undefined();
+}
 Napi::Value Search    (const Napi::CallbackInfo& info) { return info.Env().Undefined(); }
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {

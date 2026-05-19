@@ -49,3 +49,27 @@ test('loadIndex carrega índice válido', () => {
 test('loadIndex lança erro para arquivo inexistente', () => {
   assert.throws(() => addon.loadIndex('/nao/existe.index'))
 })
+
+test('buildIndex produz stats corretos', () => {
+  const n = 200, ndim = 14, nlist = 4
+  const vectors = new Float32Array(n * ndim).map(() => Math.random())
+  const labels  = new Int32Array(n).map(() => Math.round(Math.random()))
+  addon.buildIndex(vectors, labels, nlist, 5)
+  const stats = addon.getStats()
+  assert.equal(stats.nlist, nlist)
+  assert.equal(stats.ntotal, n)
+})
+
+test('buildIndex + saveIndex + loadIndex preserva ntotal e nlist', () => {
+  const path = resolve(tmpdir(), 'test_roundtrip.index')
+  const n = 200, ndim = 14, nlist = 4
+  const vectors = new Float32Array(n * ndim).map(() => Math.random())
+  const labels  = new Int32Array(n).map(() => Math.round(Math.random()))
+  addon.buildIndex(vectors, labels, nlist, 5)
+  addon.saveIndex(path)
+  addon.loadIndex(path)
+  const stats = addon.getStats()
+  assert.equal(stats.nlist, nlist)
+  assert.equal(stats.ntotal, n)
+  unlinkSync(path)
+})
