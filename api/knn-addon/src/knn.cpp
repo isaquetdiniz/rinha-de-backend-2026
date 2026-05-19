@@ -69,16 +69,21 @@ static void writeIndex(const std::string& path) {
 }
 
 static void readIndex(const std::string& path) {
+    g_loaded = false;
+    g_index  = IVFIndex{};   // reset completo antes de qualquer leitura
+
     std::ifstream f(path, std::ios::binary);
     if (!f) throw std::runtime_error("Cannot open: " + path);
 
     f.read(reinterpret_cast<char*>(&g_index.nlist),  4);
     f.read(reinterpret_cast<char*>(&g_index.ndim),   4);
     f.read(reinterpret_cast<char*>(&g_index.ntotal), 4);
+    if (f.fail()) throw std::runtime_error("Truncated or empty file: " + path);
 
     g_index.centroids.resize(static_cast<size_t>(g_index.nlist) * g_index.ndim);
     f.read(reinterpret_cast<char*>(g_index.centroids.data()),
            static_cast<std::streamsize>(g_index.nlist) * g_index.ndim * sizeof(float));
+    if (f.fail()) throw std::runtime_error("Truncated file (centroids): " + path);
 
     g_index.vectors.resize(g_index.nlist);
     g_index.labels.resize(g_index.nlist);
@@ -86,12 +91,14 @@ static void readIndex(const std::string& path) {
     for (int i = 0; i < g_index.nlist; i++) {
         int32_t sz;
         f.read(reinterpret_cast<char*>(&sz), 4);
+        if (f.fail()) throw std::runtime_error("Truncated file (cluster size): " + path);
         g_index.vectors[i].resize(static_cast<size_t>(sz) * g_index.ndim);
         g_index.labels[i].resize(sz);
         f.read(reinterpret_cast<char*>(g_index.vectors[i].data()),
                static_cast<std::streamsize>(sz) * g_index.ndim * sizeof(int16_t));
         f.read(reinterpret_cast<char*>(g_index.labels[i].data()),
                static_cast<std::streamsize>(sz) * sizeof(int32_t));
+        if (f.fail()) throw std::runtime_error("Truncated file (cluster data): " + path);
     }
     g_loaded = true;
 }
