@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test 'src/*.test.ts' 'scripts/*.test.ts'"
+    "test": "node --experimental-strip-types --test 'src/*.test.ts' 'scripts/*.test.ts'",
+    "build:addon": "(cd knn-addon && npx node-gyp configure && npx node-gyp build)"
   },
   "dependencies": {
     "faiss-node": "^0.5.1",
@@ -14,6 +15,7 @@
     "@types/node": "^22.0.0",
     "@types/stream-chain": "^2.1.0",
     "@types/stream-json": "^1.7.7",
+    "node-addon-api": "^8.7.0",
     "stream-chain": "^2.2.5",
     "stream-json": "^1.8.0",
     "typescript": "^5.5.0"
