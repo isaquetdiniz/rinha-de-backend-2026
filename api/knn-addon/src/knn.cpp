@@ -163,7 +163,7 @@ Napi::Value BuildIndex(const Napi::CallbackInfo& info) {
 
         std::shuffle(idx.begin(), idx.begin() + trainN, rng);
         for (int c = 0; c < nlist; c++) {
-            const float* src = trainVecs.data() + static_cast<size_t>(idx[c]) * ndim;
+            const float* src = trainVecs.data() + static_cast<size_t>(c) * ndim;
             std::copy(src, src + ndim, g_index.centroids.data() + static_cast<size_t>(c) * ndim);
         }
 
