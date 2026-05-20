@@ -8,7 +8,6 @@
     "build:addon": "(cd knn-addon && npx node-gyp configure && npx node-gyp build)"
   },
   "dependencies": {
-    "faiss-node": "^0.5.1",
     "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js/archive/refs/tags/v20.67.0.tar.gz"
   },
   "devDependencies": {

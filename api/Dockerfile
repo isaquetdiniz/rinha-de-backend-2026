@@ -16,7 +16,7 @@ RUN npx node-gyp configure && npx node-gyp build
 WORKDIR /build
 COPY api/scripts/ ./scripts/
 COPY api/references.json.gz ./references.json.gz
-RUN OUTPUT_DIR=/data KNN_NLIST=1024 KNN_ITERATIONS=20 \
+RUN OUTPUT_DIR=/data KNN_NLIST=4096 KNN_ITERATIONS=20 \
     node --experimental-strip-types scripts/build-knn-index.ts
 
 # Stage 2: Runtime

@@ -1,6 +1,3 @@
-volumes:
-  sockets:
-
 services:
   nginx:
     image: nginx:alpine
@@ -26,11 +23,8 @@ services:
       dockerfile: api/Dockerfile
     environment:
       SOCKET_PATH: /sockets/api1.sock
-      USE_KNN: "true"
-      KNN_NPROBE: "64"
-      KNN_NPROBE_FAST: "2"
-      KNN_K: "5"
-      KNN_THRESHOLD: "0.6"
+      KNN_NPROBE: "24"
+      KNN_NPROBE_FAST: "5"
       DATA_DIR: /data
     volumes:
       - sockets:/sockets
@@ -48,11 +42,8 @@ services:
       dockerfile: api/Dockerfile
     environment:
       SOCKET_PATH: /sockets/api2.sock
-      USE_KNN: "true"
-      KNN_NPROBE: "64"
-      KNN_NPROBE_FAST: "2"
-      KNN_K: "5"
-      KNN_THRESHOLD: "0.6"
+      KNN_NPROBE: "24"
+      KNN_NPROBE_FAST: "5"
       DATA_DIR: /data
     volumes:
       - sockets:/sockets
@@ -63,6 +54,9 @@ services:
         limits:
           cpus: "0.45"
           memory: "160MB"
+
+volumes:
+  sockets:
 
 networks:
   backend:

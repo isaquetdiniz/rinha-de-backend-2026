@@ -10,6 +10,9 @@
 #include <numeric>
 #include <random>
 #include <queue>
+#ifdef __AVX2__
+#include <immintrin.h>
+#endif
 
 // ─── Estrutura do índice ──────────────────────────────────────────────────────
 
@@ -22,8 +25,9 @@ struct IVFIndex {
     std::vector<std::vector<int32_t>> labels;    // [cluster][label]
 };
 
-static IVFIndex g_index;
-static bool     g_loaded = false;
+static IVFIndex                          g_index;
+static bool                              g_loaded = false;
+static std::vector<std::pair<float,int>> g_cdists; // buffer reutilizável — seguro (single-threaded)
 
 // ─── Helpers de distância ─────────────────────────────────────────────────────
 
@@ -32,6 +36,24 @@ static float l2sq(const float* a, const float* b, int ndim) {
     for (int i = 0; i < ndim; i++) { float d = a[i] - b[i]; s += d * d; }
     return s;
 }
+
+// ─── Distância L2 vetorizada (AVX2 + FMA) ────────────────────────────────────
+// ndim=14: dims 0-7 via AVX2 (int16→float), dims 8-13 scalar
+#ifdef __AVX2__
+__attribute__((target("avx2,fma")))
+static inline float l2sq_q16(const float* __restrict__ q, const int16_t* __restrict__ v) {
+    __m256i vi32 = _mm256_cvtepi16_epi32(_mm_loadu_si128(reinterpret_cast<const __m128i*>(v)));
+    __m256  vf   = _mm256_mul_ps(_mm256_cvtepi32_ps(vi32), _mm256_set1_ps(1.0f / 32767.0f));
+    __m256  diff = _mm256_sub_ps(_mm256_loadu_ps(q), vf);
+    __m256  acc  = _mm256_mul_ps(diff, diff);
+    __m128  s    = _mm_add_ps(_mm256_castps256_ps128(acc), _mm256_extractf128_ps(acc, 1));
+    s = _mm_hadd_ps(s, s);
+    s = _mm_hadd_ps(s, s);
+    float d = _mm_cvtss_f32(s);
+    for (int i = 8; i < 14; i++) { float df = q[i] - v[i] * (1.0f / 32767.0f); d += df * df; }
+    return d;
+}
+#endif
 
 // ─── Quantização int16 — range [-1, 1] → [-32767, 32767] ─────────────────────
 
@@ -100,6 +122,7 @@ static void readIndex(const std::string& path) {
                static_cast<std::streamsize>(sz) * sizeof(int32_t));
         if (f.fail()) throw std::runtime_error("Truncated file (cluster data): " + path);
     }
+    g_cdists.resize(g_index.nlist);
     g_loaded = true;
 }
 
@@ -236,17 +259,18 @@ Napi::Value Search(const Napi::CallbackInfo& info) {
         return env.Undefined();
     }
     try {
-        auto         queryArr = info[0].As<Napi::Float32Array>();
-        int          k        = info[1].As<Napi::Number>().Int32Value();
-        int          nProbe   = info[2].As<Napi::Number>().Int32Value();
-        const float* query    = queryArr.Data();
-        const int    ndim     = g_index.ndim;
-        const int    nl       = g_index.nlist;
+        // 14 scalars + k + nProbe — evita alocação de Float32Array no boundary JS→C++
+        float     query[14];
+        for (int i = 0; i < 14; i++) query[i] = info[i].As<Napi::Number>().FloatValue();
+        int       k      = info[14].As<Napi::Number>().Int32Value();
+        int       nProbe = info[15].As<Napi::Number>().Int32Value();
+        const int ndim   = g_index.ndim;
+        const int nl     = g_index.nlist;
 
         nProbe = std::min(nProbe, nl);
 
         // Passo 1: encontra os nProbe centroides mais próximos da query
-        std::vector<std::pair<float, int>> cdists(nl);
+        auto& cdists = g_cdists;
         for (int c = 0; c < nl; c++) {
             cdists[c] = { l2sq(query, g_index.centroids.data() + static_cast<size_t>(c) * ndim, ndim), c };
         }
@@ -263,12 +287,16 @@ Napi::Value Search(const Napi::CallbackInfo& info) {
             const int    sz  = static_cast<int>(ls.size());
 
             for (int j = 0; j < sz; j++) {
-                float           d    = 0.0f;
-                const int16_t*  vptr = vs.data() + static_cast<size_t>(j) * ndim;
+                const int16_t* vptr = vs.data() + static_cast<size_t>(j) * ndim;
+#ifdef __AVX2__
+                float d = l2sq_q16(query, vptr);
+#else
+                float d = 0.0f;
                 for (int di = 0; di < ndim; di++) {
                     float diff = query[di] - dequantize(vptr[di]);
                     d += diff * diff;
                 }
+#endif
                 if (static_cast<int>(heap.size()) < k) {
                     heap.push({ d, ls[j] });
                 } else if (d < heap.top().first) {

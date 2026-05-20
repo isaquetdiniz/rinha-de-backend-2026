@@ -1,22 +1,28 @@
 import { chmodSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { App } from 'uWebSockets.js'
-import { FaissService } from './faiss.ts'
 import { KnnService } from './knn.ts'
 import { toVector } from './normalize.ts'
 import type { FraudRequest } from './types.ts'
 
 const DATA_DIR    = process.env['DATA_DIR']    ?? '/data'
 const SOCKET_PATH = process.env['SOCKET_PATH'] as string
-const USE_KNN     = process.env['USE_KNN']     === 'true'
-const THRESHOLD   = parseFloat(process.env['KNN_THRESHOLD'] ?? '0.6')
-const K           = parseInt(process.env['KNN_K']           ?? '5', 10)
+const K           = 5
+const THRESHOLD   = 0.6
+
+// Pré-computa as 6 respostas possíveis (K=5 → fraudCount ∈ {0..5}) — zero JSON.stringify por request
+const RESPONSES = Array.from({ length: K + 1 }, (_, fraudCount) => {
+  const fraud_score = fraudCount / K
+  return JSON.stringify({ approved: fraud_score < THRESHOLD, fraud_score })
+})
 
 interface Searcher { search(vector: number[]): number }
 
-const searcher: Searcher = USE_KNN
-  ? new KnnService(resolve(DATA_DIR, 'knn.index'))
-  : new FaissService(resolve(DATA_DIR, 'txns.index'), resolve(DATA_DIR, 'txns.labels'))
+const searcher: Searcher = new KnnService(resolve(DATA_DIR, 'knn.index'))
+
+// Aquece L2/L3 cache e branch predictor — elimina cold-start no p99
+const _warmupVec = new Array(14).fill(0.5)
+for (let i = 0; i < 500; i++) searcher.search(_warmupVec)
 
 const app = App()
 
@@ -48,14 +54,12 @@ app.post('/fraud-score', (res) => {
     }
 
     try {
-      const vector      = toVector(body)
-      const fraudCount  = searcher.search(vector)
-      const fraud_score = fraudCount / K
-      const response    = JSON.stringify({ approved: fraud_score < THRESHOLD, fraud_score })
+      const vector     = toVector(body)
+      const fraudCount = searcher.search(vector)
       res.cork(() => {
         res.writeStatus('200 OK')
         res.writeHeader('Content-Type', 'application/json')
-        res.end(response)
+        res.end(RESPONSES[fraudCount])
       })
     } catch {
       res.cork(() => { res.writeStatus('500 Internal Server Error'); res.end() })
