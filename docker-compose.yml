@@ -18,15 +18,12 @@ services:
           memory: "10MB"
 
   api1:
-    image: ghcr.io/isaquetdiniz/rinha-de-backend-2026:f6249d5
+    image: ghcr.io/isaquetdiniz/rinha-de-backend-2026:fbd1137
     platform: linux/amd64
     environment:
       SOCKET_PATH: /sockets/api1.sock
-      USE_KNN: "true"
-      KNN_NPROBE: "64"
-      KNN_NPROBE_FAST: "2"
-      KNN_K: "5"
-      KNN_THRESHOLD: "0.6"
+      KNN_NPROBE: "24"
+      KNN_NPROBE_FAST: "5"
       DATA_DIR: /data
     volumes:
       - sockets:/sockets
@@ -39,15 +36,12 @@ services:
           memory: "170MB"
 
   api2:
-    image: ghcr.io/isaquetdiniz/rinha-de-backend-2026:f6249d5
+    image: ghcr.io/isaquetdiniz/rinha-de-backend-2026:fbd1137
     platform: linux/amd64
     environment:
       SOCKET_PATH: /sockets/api2.sock
-      USE_KNN: "true"
-      KNN_NPROBE: "64"
-      KNN_NPROBE_FAST: "2"
-      KNN_K: "5"
-      KNN_THRESHOLD: "0.6"
+      KNN_NPROBE: "24"
+      KNN_NPROBE_FAST: "5"
       DATA_DIR: /data
     volumes:
       - sockets:/sockets
