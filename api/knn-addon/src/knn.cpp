@@ -287,10 +287,7 @@ Napi::Value Search(const Napi::CallbackInfo& info) {
         const float* cen = g_index.centroids.data();
 #ifdef __AVX2__
         for (int c = 0; c < nl; c++) {
-            const float* cp = cen + static_cast<size_t>(c) * ndim;
-            // prefetch próximo centróide (~56 bytes = 1 cache line)
-            if (c + 1 < nl) __builtin_prefetch(cp + ndim, 0, 1);
-            cdists[c] = { l2sq_f32_14(query, cp), c };
+            cdists[c] = { l2sq_f32_14(query, cen + static_cast<size_t>(c) * ndim), c };
         }
 #else
         for (int c = 0; c < nl; c++) {
