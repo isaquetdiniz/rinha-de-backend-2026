@@ -28,6 +28,7 @@ services:
       SOCKET_PATH: /sockets/api1.sock
       USE_KNN: "true"
       KNN_NPROBE: "64"
+      KNN_NPROBE_FAST: "2"
       KNN_K: "5"
       KNN_THRESHOLD: "0.6"
       DATA_DIR: /data
@@ -49,6 +50,7 @@ services:
       SOCKET_PATH: /sockets/api2.sock
       USE_KNN: "true"
       KNN_NPROBE: "64"
+      KNN_NPROBE_FAST: "2"
       KNN_K: "5"
       KNN_THRESHOLD: "0.6"
       DATA_DIR: /data
