@@ -265,6 +265,84 @@ Napi::Value BuildIndex(const Napi::CallbackInfo& info) {
     }
     return env.Undefined();
 }
+// Executa busca IVF e retorna contagem de fraudes no top-k — zero alocação no heap JS
+static int ivfFraudCount(const float* query, int k, int nProbe) {
+    const int ndim = g_index.ndim;
+    const int nl   = g_index.nlist;
+    nProbe = std::min(nProbe, nl);
+
+    auto& cdists = g_cdists;
+    const float* cen = g_index.centroids.data();
+#ifdef __AVX2__
+    for (int c = 0; c < nl; c++)
+        cdists[c] = { l2sq_f32_14(query, cen + static_cast<size_t>(c) * ndim), c };
+#else
+    for (int c = 0; c < nl; c++)
+        cdists[c] = { l2sq(query, cen + static_cast<size_t>(c) * ndim, ndim), c };
+#endif
+    std::partial_sort(cdists.begin(), cdists.begin() + nProbe, cdists.end());
+
+    using Pair = std::pair<float, int32_t>;
+    std::priority_queue<Pair> heap;
+
+    for (int pi = 0; pi < nProbe; pi++) {
+        int         ci  = cdists[pi].second;
+        const auto& vs  = g_index.vectors[ci];
+        const auto& ls  = g_index.labels[ci];
+        const int   sz  = static_cast<int>(ls.size());
+        for (int j = 0; j < sz; j++) {
+            const int16_t* vptr = vs.data() + static_cast<size_t>(j) * ndim;
+#ifdef __AVX2__
+            float d = l2sq_q16(query, vptr);
+#else
+            float d = 0.0f;
+            for (int di = 0; di < ndim; di++) {
+                float diff = query[di] - dequantize(vptr[di]);
+                d += diff * diff;
+            }
+#endif
+            if (static_cast<int>(heap.size()) < k) {
+                heap.push({ d, ls[j] });
+            } else if (d < heap.top().first) {
+                heap.pop();
+                heap.push({ d, ls[j] });
+            }
+        }
+    }
+
+    int n = 0;
+    while (!heap.empty()) { if (heap.top().second == 1) n++; heap.pop(); }
+    return n;
+}
+
+// N-API: 14 scalars + k + nProbeFast + nProbeFull + thresholdCount → int32 fraudCount
+// Lógica adaptive nProbe inteira em C++: zero roundtrips JS para casos ambíguos
+Napi::Value SearchFraud(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    if (!g_loaded) {
+        Napi::Error::New(env, "Index not loaded").ThrowAsJavaScriptException();
+        return env.Undefined();
+    }
+    try {
+        float query[14];
+        for (int i = 0; i < 14; i++) query[i] = info[i].As<Napi::Number>().FloatValue();
+        const int k              = info[14].As<Napi::Number>().Int32Value();
+        const int nProbeFast     = info[15].As<Napi::Number>().Int32Value();
+        const int nProbeFull     = info[16].As<Napi::Number>().Int32Value();
+        const int thresholdCount = info[17].As<Napi::Number>().Int32Value();
+
+        int fraudCount = ivfFraudCount(query, k, nProbeFast);
+        // expande só na fronteira de decisão (pode flipar approved↔declined)
+        if (fraudCount >= thresholdCount - 1 && fraudCount <= thresholdCount)
+            fraudCount = ivfFraudCount(query, k, nProbeFull);
+
+        return Napi::Number::New(env, fraudCount);
+    } catch (const std::exception& e) {
+        Napi::Error::New(env, e.what()).ThrowAsJavaScriptException();
+        return env.Undefined();
+    }
+}
+
 Napi::Value Search(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
     if (!g_loaded) {
@@ -347,11 +425,12 @@ Napi::Value Search(const Napi::CallbackInfo& info) {
 }
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
-    exports.Set("buildIndex", Napi::Function::New(env, BuildIndex));
-    exports.Set("saveIndex",  Napi::Function::New(env, SaveIndex));
-    exports.Set("loadIndex",  Napi::Function::New(env, LoadIndex));
-    exports.Set("getStats",   Napi::Function::New(env, GetStats));
-    exports.Set("search",     Napi::Function::New(env, Search));
+    exports.Set("buildIndex",  Napi::Function::New(env, BuildIndex));
+    exports.Set("saveIndex",   Napi::Function::New(env, SaveIndex));
+    exports.Set("loadIndex",   Napi::Function::New(env, LoadIndex));
+    exports.Set("getStats",    Napi::Function::New(env, GetStats));
+    exports.Set("search",      Napi::Function::New(env, Search));
+    exports.Set("searchFraud", Napi::Function::New(env, SearchFraud));
     return exports;
 }
 
