@@ -37,8 +37,8 @@ static float l2sq(const float* a, const float* b, int ndim) {
     return s;
 }
 
-// ─── Distância L2 vetorizada (AVX2 + FMA) ────────────────────────────────────
-// ndim=14: dims 0-7 via AVX2 (int16→float), dims 8-13 scalar
+// ─── Distância L2 vetorizada (AVX2) ──────────────────────────────────────────
+// ndim=14: dims 0-7 via AVX2 (8 floats), dims 8-13 scalar
 #ifdef __AVX2__
 __attribute__((target("avx2,fma")))
 static inline float l2sq_q16(const float* __restrict__ q, const int16_t* __restrict__ v) {
@@ -51,6 +51,19 @@ static inline float l2sq_q16(const float* __restrict__ q, const int16_t* __restr
     s = _mm_hadd_ps(s, s);
     float d = _mm_cvtss_f32(s);
     for (int i = 8; i < 14; i++) { float df = q[i] - v[i] * (1.0f / 32767.0f); d += df * df; }
+    return d;
+}
+
+// centroid scan: float32×14, prefetch-friendly
+__attribute__((target("avx2,fma")))
+static inline float l2sq_f32_14(const float* __restrict__ q, const float* __restrict__ c) {
+    __m256 diff = _mm256_sub_ps(_mm256_loadu_ps(q), _mm256_loadu_ps(c));
+    __m256 acc  = _mm256_mul_ps(diff, diff);
+    __m128 s    = _mm_add_ps(_mm256_castps256_ps128(acc), _mm256_extractf128_ps(acc, 1));
+    s = _mm_hadd_ps(s, s);
+    s = _mm_hadd_ps(s, s);
+    float d = _mm_cvtss_f32(s);
+    for (int i = 8; i < 14; i++) { float df = q[i] - c[i]; d += df * df; }
     return d;
 }
 #endif
@@ -271,9 +284,19 @@ Napi::Value Search(const Napi::CallbackInfo& info) {
 
         // Passo 1: encontra os nProbe centroides mais próximos da query
         auto& cdists = g_cdists;
+        const float* cen = g_index.centroids.data();
+#ifdef __AVX2__
         for (int c = 0; c < nl; c++) {
-            cdists[c] = { l2sq(query, g_index.centroids.data() + static_cast<size_t>(c) * ndim, ndim), c };
+            const float* cp = cen + static_cast<size_t>(c) * ndim;
+            // prefetch próximo centróide (~56 bytes = 1 cache line)
+            if (c + 1 < nl) __builtin_prefetch(cp + ndim, 0, 1);
+            cdists[c] = { l2sq_f32_14(query, cp), c };
         }
+#else
+        for (int c = 0; c < nl; c++) {
+            cdists[c] = { l2sq(query, cen + static_cast<size_t>(c) * ndim, ndim), c };
+        }
+#endif
         std::partial_sort(cdists.begin(), cdists.begin() + nProbe, cdists.end());
 
         // Passo 2: busca nos nProbe clusters com max-heap de tamanho k
