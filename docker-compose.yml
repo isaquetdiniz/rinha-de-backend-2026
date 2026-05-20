@@ -15,7 +15,7 @@ services:
       resources:
         limits:
           cpus: "0.1"
-          memory: "30MB"
+          memory: "10MB"
 
   api1:
     build:
@@ -34,7 +34,7 @@ services:
       resources:
         limits:
           cpus: "0.45"
-          memory: "160MB"
+          memory: "170MB"
 
   api2:
     build:
@@ -53,7 +53,7 @@ services:
       resources:
         limits:
           cpus: "0.45"
-          memory: "160MB"
+          memory: "170MB"
 
 volumes:
   sockets:

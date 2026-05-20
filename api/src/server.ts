@@ -3,7 +3,6 @@ import { resolve } from 'node:path'
 import { App } from 'uWebSockets.js'
 import { KnnService } from './knn.ts'
 import { toVector } from './normalize.ts'
-import { phases, statsJSON } from './stats.ts'
 import type { FraudRequest } from './types.ts'
 
 const DECODER = new TextDecoder()
@@ -52,29 +51,21 @@ app.post('/fraud-score', (res) => {
     }
     if (aborted) return
 
-    const t0 = performance.now()
     let body: FraudRequest
     try {
-      const tp = performance.now()
       // Fast path (>99% of requests): single chunk — decode ArrayBuffer directly, zero extra copies
       const str = chunks
         ? Buffer.concat([...chunks, Buffer.from(chunk)]).toString()
         : DECODER.decode(chunk)
       body = JSON.parse(str) as FraudRequest
-      phases.jsonParse.record(performance.now() - tp)
     } catch {
       res.cork(() => { res.writeStatus('400 Bad Request'); res.end() })
       return
     }
 
     try {
-      const t1 = performance.now()
-      const vector = toVector(body)
-      phases.toVector.record(performance.now() - t1)
-
+      const vector     = toVector(body)
       const fraudCount = searcher.search(vector)
-      phases.total.record(performance.now() - t0)
-
       res.cork(() => {
         res.writeStatus('200 OK')
         res.writeHeader('Content-Type', 'application/json')
@@ -83,14 +74,6 @@ app.post('/fraud-score', (res) => {
     } catch {
       res.cork(() => { res.writeStatus('500 Internal Server Error'); res.end() })
     }
-  })
-})
-
-app.get('/stats', (res) => {
-  res.cork(() => {
-    res.writeStatus('200 OK')
-    res.writeHeader('Content-Type', 'application/json')
-    res.end(statsJSON())
   })
 })
 
