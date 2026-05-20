@@ -5,7 +5,7 @@
     "include_dirs": [
       "<!@(node -p \"require('node-addon-api').include\")"
     ],
-    "cflags_cc": ["-O3", "-march=haswell", "-std=c++17", "-fexceptions"],
+    "cflags_cc": ["-O3", "-std=c++17", "-fexceptions"],
     "defines": ["NODE_ADDON_API_CPP_EXCEPTIONS"],
     "conditions": [
       ["OS=='mac'", {
@@ -15,6 +15,9 @@
           "CLANG_CXX_LANGUAGE_STANDARD": "c++17",
           "CLANG_CXX_LIBRARY": "libc++"
         }
+      }],
+      ["OS=='linux' and target_arch=='x64'", {
+        "cflags_cc+": ["-march=haswell"]
       }]
     ]
   }]
